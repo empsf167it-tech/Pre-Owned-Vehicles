@@ -133,16 +133,6 @@
         }
 
         /* nav */
-        #bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 3px;
-            width: 0;
-            background: linear-gradient(90deg, var(--cop), var(--gold));
-            z-index: 100
-        }
-
         nav {
             position: fixed;
             inset: 0 0 auto;
@@ -893,10 +883,6 @@
         }
 
         @media(max-width:960px) {
-            nav ul {
-                display: none
-            }
-
             .split,
             .spot,
             .calc,
@@ -1233,6 +1219,14 @@
             gap: 2.2rem
         }
 
+        nav ul a.active {
+            color: var(--gold)
+        }
+
+        nav ul a.active:after {
+            width: 100%
+        }
+
         @media(max-width:960px) {
             .gal {
                 grid-template-columns: 1fr 1fr
@@ -1251,7 +1245,7 @@
             }
         }
 
-        @media(max-width:768px) {
+        @media(max-width:960px) {
             .burger {
                 display: flex
             }
@@ -1308,7 +1302,8 @@
                 transition: color .3s var(--ease)
             }
 
-            .nav-menu ul a:hover {
+            .nav-menu ul a:hover,
+            .nav-menu ul a.active {
                 color: var(--gold)
             }
 
@@ -1336,7 +1331,6 @@
 </head>
 
 <body>
-    <div id="bar"></div>
     <div id="glow"></div>
 
     <nav id="nav">
@@ -1360,10 +1354,10 @@
                 <li><a href="#inventory">Collection</a></li>
                 <li><a href="#why">Certification</a></li>
                 <li><a href="#process">Process</a></li>
-                <li><a href="#gallery">Gallery</a></li>
                 <li><a href="#reviews">Reviews</a></li>
                 <li><a href="#finance">Finance</a></li>
                 <li><a href="#contact">Visit</a></li>
+                <li><a href="#gallery">Gallery</a></li>
             </ul>
             <a href="#contact" class="btn fill nav-book-btn" style="padding:.65rem 1.5rem;font-size:.9rem">Book</a>
         </div>
@@ -1806,7 +1800,6 @@
             <div class="bot"><span>© 2026 Verdant Motors. All rights reserved.</span><span><a href="#">Privacy</a>
                     &nbsp;·&nbsp; <a href="#">Terms</a> &nbsp;·&nbsp; <a href="#">Warranty policy</a></span><a
                     href="#hero">Back to top</a></div>
-            <div class="mark" aria-hidden="true">Verdant Motors</div>
         </div>
     </footer>
 
@@ -1816,14 +1809,19 @@
         $$('img').forEach(i => i.addEventListener('error', () => i.style.display = 'none'));
         // duplicate marquee for seamless loop
         $('#track').innerHTML += $('#track').innerHTML;
-        // scroll: progress bar, sticky nav, parallax
-        const bar = $('#bar'), nav = $('#nav'), par = $$('[data-par]');
+        // scroll: sticky nav, active link highlight, parallax
+        const nav = $('#nav'), par = $$('[data-par]');
+        const navLinks = $$('#navMenu ul a[href^="#"]').map(a => ({ a, sec: document.getElementById(a.getAttribute('href').slice(1)) })).filter(l => l.sec);
+        function setActive() {
+            const line = innerHeight * .35; let cur = null;
+            navLinks.forEach(l => { if (l.sec.getBoundingClientRect().top <= line) { if (!cur || l.sec.getBoundingClientRect().top >= cur.sec.getBoundingClientRect().top) cur = l } });
+            navLinks.forEach(l => { const on = l === cur; l.a.classList.toggle('active', on); on ? l.a.setAttribute('aria-current', 'true') : l.a.removeAttribute('aria-current') })
+        }
         function onScroll() {
-            const y = scrollY, h = document.documentElement.scrollHeight - innerHeight;
-            bar.style.width = (y / h * 100) + '%'; nav.classList.toggle('s', y > 60);
+            const y = scrollY; nav.classList.toggle('s', y > 60); setActive();
             par.forEach(el => { const r = el.parentElement.getBoundingClientRect(); if (r.bottom > 0 && r.top < innerHeight) el.style.transform = `translateY(${(r.top + r.height / 2 - innerHeight / 2) * -el.dataset.par}px) scale(1.2)` })
         }
-        addEventListener('scroll', onScroll, { passive: true }); onScroll();
+        addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', onScroll); onScroll();
         // reveal + counters + process line
         const fmt = n => n.toLocaleString('en-US');
         function count(el) {
